@@ -2,7 +2,6 @@
 import { useEffect, useState } from "react";
 import { fetchSentiments } from "./utils/loadSentiments";
 import MapChart from "./components/MapChart";
-import Controls from "./components/Controls";
 import Legend from "./components/Legend";
 
 export default function App() {
@@ -10,14 +9,14 @@ export default function App() {
   const [view, setView] = useState("overall");
   const [detail, setDetail] = useState(null);
 
-  // Load CSV on mount
+  // 1) Load the CSV once on mount
   useEffect(() => {
     fetchSentiments()
       .then((rows) => setData(rows))
       .catch((e) => console.error("Failed to load CSV", e));
   }, []);
 
-  // When a country is clicked, prepare detail
+  // 2) Handle country-click: build detail object
   const handleCountryClick = (countryName, val) => {
     const regions = data.filter((d) =>
       countryName.toLowerCase().includes(d.country.toLowerCase())
@@ -33,27 +32,96 @@ export default function App() {
     setDetail({ countryName, val, breakdown, regions });
   };
 
+  // 3) Show loading until data arrives
   if (data.length === 0) {
-    return <div className="p-6 text-center">Loading…</div>;
+    return <div className="p-6 text-center text-gray-700">Loading…</div>;
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <h1 className="text-3xl font-bold text-center mb-4">
+    <div className="min-h-screen bg-gray-50 p-4 md:p-6 lg:p-8">
+      {/* Title */}
+      <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center mb-4">
         Global Sentiment Dashboard
       </h1>
 
-      <Controls selected={view} onChange={setView} />
-      <Legend />
-
-      <div className="border rounded-lg overflow-hidden h-[600px] mb-6">
-        <MapChart data={data} onCountryClick={handleCountryClick} />
+      {/* Controls: wrap on small screens */}
+      <div className="flex flex-wrap justify-center gap-2 mb-4">
+        <button
+          onClick={() => setView("overall")}
+          className={`px-3 py-1 rounded ${
+            view === "overall" ? "bg-blue-600 text-white" : "bg-gray-200 hover:bg-gray-300 text-gray-800"
+          } text-sm sm:text-base`}
+        >
+          Overall
+        </button>
+        <button
+          onClick={() => setView("negative")}
+          className={`px-3 py-1 rounded ${
+            view === "negative" ? "bg-red-600 text-white" : "bg-gray-200 hover:bg-gray-300 text-gray-800"
+          } text-sm sm:text-base`}
+        >
+          Negative
+        </button>
+        <button
+          onClick={() => setView("neutral")}
+          className={`px-3 py-1 rounded ${
+            view === "neutral" ? "bg-yellow-600 text-white" : "bg-gray-200 hover:bg-gray-300 text-gray-800"
+          } text-sm sm:text-base`}
+        >
+          Neutral
+        </button>
+        <button
+          onClick={() => setView("positive")}
+          className={`px-3 py-1 rounded ${
+            view === "positive" ? "bg-green-600 text-white" : "bg-gray-200 hover:bg-gray-300 text-gray-800"
+          } text-sm sm:text-base`}
+        >
+          Positive
+        </button>
       </div>
 
+      {/* Optional: a small legend that only shows on sm+ */}
+      <div className="text-center text-xs sm:text-sm text-gray-600 mb-4">
+        {view === "overall" && (
+          <>
+            <span className="inline-block px-2 py-1 bg-green-100 text-green-800 rounded-full mr-1">
+              Positive
+            </span>
+            <span className="inline-block px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full mr-1">
+              Neutral
+            </span>
+            <span className="inline-block px-2 py-1 bg-red-100 text-red-800 rounded-full">
+              Negative
+            </span>
+          </>
+        )}
+        {view === "negative" && (
+          <span className="inline-block px-2 py-1 bg-red-100 text-red-800 rounded-full">
+            Negative only
+          </span>
+        )}
+        {view === "neutral" && (
+          <span className="inline-block px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full">
+            Neutral only
+          </span>
+        )}
+        {view === "positive" && (
+          <span className="inline-block px-2 py-1 bg-green-100 text-green-800 rounded-full">
+            Positive only
+          </span>
+        )}
+      </div>
+
+      {/* Responsive Map Container */}
+      <div className="w-full h-64 sm:h-80 md:h-96 lg:h-[600px] mb-6">
+        <MapChart data={data} selectedView={view} onCountryClick={handleCountryClick} />
+      </div>
+
+      {/* Detail Card (below map) */}
       {detail && (
         <div className="max-w-lg mx-auto bg-white shadow-lg rounded-lg p-6 mb-6 border-l-4 border-blue-600">
-          {/* Country Name */}
-          <h2 className="text-2xl font-bold text-blue-600 mb-4">
+          {/* Country Title */}
+          <h2 className="text-xl sm:text-2xl font-bold text-blue-600 mb-4">
             {detail.countryName}
           </h2>
 
@@ -96,7 +164,7 @@ export default function App() {
             ))}
           </div>
 
-          {/* Region List */}
+          {/* Regions List */}
           <div>
             <h3 className="text-lg font-medium text-gray-800 mb-2">Regions</h3>
             <ul className="divide-y divide-gray-200 max-h-56 overflow-auto">

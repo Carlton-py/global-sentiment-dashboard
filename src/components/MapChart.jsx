@@ -31,7 +31,7 @@ export default function MapChart({ data, onCountryClick }) {
   );
 
   return (
-    <ComposableMap projection="geoMercator" className="shadow-lg">
+    <ComposableMap projection="geoMercator" className="w-full h-full">
       <Geographies geography={GEO_URL}>
         {({ geographies }) =>
           geographies.map((geo) => {
